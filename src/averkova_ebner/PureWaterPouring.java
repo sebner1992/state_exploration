@@ -10,103 +10,131 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-public class PureWaterPouring {
-	private final int xCapacity;
-	private final int yCapacity;
-	private Set<State> explored;
-	LinkedList<LinkedList<?>> frontier;
-	private State initState = new State(0, 0);
+public class PureWaterPouring
+{
+    private final int xCapacity;
+    private final int yCapacity;
+    private Set<State> explored;
+    LinkedList<LinkedList<?>> frontier;
+    private State initState = new State(0, 0);
 
-	public PureWaterPouring(int xCapacity, int yCapacity) {
-		this.xCapacity = xCapacity;
-		this.yCapacity = yCapacity;
-		explored = new HashSet<>();
-		frontier = new LinkedList<>();
-		frontier.push(new LinkedList<>(Arrays.asList(initState)));
-	}
+    public PureWaterPouring(int xCapacity, int yCapacity)
+    {
+        this.xCapacity = xCapacity;
+        this.yCapacity = yCapacity;
+        explored = new HashSet<>();
+        frontier = new LinkedList<>();
+        frontier.push(new LinkedList<>(Arrays.asList(initState)));
+    }
 
-	private boolean containsGoal(State state, int goal) {
-		return state.getX() == goal || state.getY() == goal;
-	}
+    private boolean containsGoal(State state, int goal)
+    {
+        return state.getX() == goal || state.getY() == goal;
+    }
 
-	private boolean isAlreadyExplored(State state) {
-		for (State entry : explored) {
-			if (entry.getX() == state.getX() && entry.getY() == state.getY()) {
-				return true;
-			}
-		}
-		return false;
-	}
+    private boolean isAlreadyExplored(State state)
+    {
+        for (State entry : explored)
+        {
+            if (entry.getX() == state.getX() && entry.getY() == state.getY())
+            {
+                return true;
+            }
+        }
+        return false;
+    }
 
-	public Collection<?> solve(int goal) {
-		if (containsGoal(initState, goal)) {
-			return Arrays.asList(initState);
-		}
-		/* note: not only the states are relevant, we also want to know, how we got there -> consider Move */		
-		Map<State, Action> successorsMap;
-		LinkedList<?> path;
-		State state;		
-		while (!frontier.isEmpty()) {			
-			path = frontier.pop();
-			state = (State) path.getLast(); // state of last path
-			successorsMap = getSuccessors(state);
+    public Collection<?> solve(int goal)
+    {
+        if (containsGoal(initState, goal))
+        {
+            return Arrays.asList(initState);
+        }
+        /* note: not only the states are relevant, we also want to know, how we got there -> consider Move */
+        Map<State, Action> successorsMap;
+        LinkedList<?> path;
+        State state;
+        while (!frontier.isEmpty())
+        {
+            path = frontier.pop();
+            state = (State) path.getLast(); // state of last path
+            successorsMap = getSuccessors(state);
 
-			for (Entry<State, Action> e : successorsMap.entrySet()) {
-				State succState = e.getKey();
-				Action succAction = e.getValue();
-				if (!isAlreadyExplored(succState)) {
-					explored.add(succState);
-					LinkedList<Object> path2 = new LinkedList<>(path); // copy path
-					path2.addLast(succAction);
-					path2.addLast(succState);
-					if (containsGoal(succState, goal)) {
-						return path2;
-					} else {
-						frontier.add(path2);
-					}
-				}
-			}
-		}
-		return Collections.emptyList();
-	}
+            for (Entry<State, Action> e : successorsMap.entrySet())
+            {
+                State succState = e.getKey();
+                Action succAction = e.getValue();
+                if (!isAlreadyExplored(succState))
+                {
+                    explored.add(succState);
+                    LinkedList<Object> path2 = new LinkedList<>(path); // copy path
+                    path2.addLast(succAction);
+                    path2.addLast(succState);
+                    if (containsGoal(succState, goal))
+                    {
+                        return path2;
+                    }
+                    else
+                    {
+                        frontier.add(path2);
+                    }
+                }
+            }
+        }
+        return Collections.emptyList();
+    }
 
-	private Map<State, Action> getSuccessors(State state) {
-		assert (state.getX() <= xCapacity && state.getY() <= yCapacity);
-		Map<State, Action> successors = new HashMap<>();
+    private Map<State, Action> getSuccessors(State state)
+    {
+        assert (state.getX() <= xCapacity && state.getY() <= yCapacity);
+        Map<State, Action> successors = new HashMap<>();
 
-		successors.put(state.moveFromXtoY(xCapacity, yCapacity), Action.from_X_to_Y);
-		successors.put(state.moveFromYtoX(xCapacity, yCapacity), Action.from_Y_to_X);
-		successors.put(state.fillX(xCapacity), Action.fill_X);
-		successors.put(state.fillY(yCapacity), Action.fill_Y);
-		successors.put(state.emptyX(), Action.empty_X);
-		successors.put(state.emptyY(), Action.empty_Y);
+        successors.put(state.moveFromXtoY(xCapacity, yCapacity), Action.from_X_to_Y);
+        successors.put(state.moveFromYtoX(xCapacity, yCapacity), Action.from_Y_to_X);
+        successors.put(state.fillX(xCapacity), Action.fill_X);
+        successors.put(state.fillY(yCapacity), Action.fill_Y);
+        successors.put(state.emptyX(), Action.empty_X);
+        successors.put(state.emptyY(), Action.empty_Y);
 
-		return successors;
-	}
+        return successors;
+    }
 
-	private enum Action{
-		from_X_to_Y, from_Y_to_X, fill_X, fill_Y, empty_X, empty_Y
-	}
+    private enum Action
+    {
+        from_X_to_Y,
+        from_Y_to_X,
+        fill_X,
+        fill_Y,
+        empty_X,
+        empty_Y
+    }
 
-	public static void main(String[] args) {
-		PureWaterPouring wp = new PureWaterPouring(4, 9);
-		Collection<?> solution = wp.solve(5);
-		if (solution.size() > 0) {
-			for (Object o : solution) {
-				if (o instanceof State) {
-					State state = (State) o;
-					System.out.print(state.getX() + "," + state.getY() + " ");
-				} else {
-					System.out.print(o.toString() + " ");
-				}
-			}
-			System.out.println();
-		} else {
-			System.out.println("no solution");
-		}
-	}
+    public static void main(String[] args)
+    {
+        PureWaterPouring wp = new PureWaterPouring(4, 9);
+        Collection<?> solution = wp.solve(5);
+        if (solution.size() > 0)
+        {
+            for (Object o : solution)
+            {
+                if (o instanceof State)
+                {
+                    State state = (State) o;
+                    System.out.print(state.getX() + "," + state.getY() + " ");
+                }
+                else
+                {
+                    System.out.print(o.toString() + " ");
+                }
+            }
+            System.out.println();
+        }
+        else
+        {
+            System.out.println("no solution");
+        }
+    }
 }
-
 
 /* original python code (p.norvig):
 
